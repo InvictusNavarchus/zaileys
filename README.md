@@ -76,7 +76,7 @@ Explore the `/examples` folder for practical use cases:
 
 ### Basic Example
 
-```ts
+```typescript
 import { Client } from "zaileys";
 
 // default configuration
@@ -105,7 +105,7 @@ wa.on("messages", async (ctx) => {
 
 ### Minimal Example
 
-```ts
+```typescript
 import { Client } from "zaileys";
 
 const wa = new Client({ authType: "qr" });
@@ -121,7 +121,7 @@ wa.on("messages", (ctx) => {
 
 Zaileys uses QR code authentication and stores sessions in a database to avoid repeated QR scans.
 
-```ts
+```typescript
 import { Client } from "zaileys";
 
 const wa = new Client({
@@ -136,7 +136,7 @@ const wa = new Client({
 
 Define custom metadata providers for dynamic boolean flags in `ctx.citation`. See [citation.ts](https://github.com/zeative/zaileys/blob/main/examples/citation.ts).
 
-```ts
+```typescript
 const wa = new Client({
   citation: {
     admins: async () => [628123456789],
@@ -155,7 +155,7 @@ wa.on("messages", (ctx) => {
 
 Detect and prevent spam with the built-in limiter. See [limiter.ts](https://github.com/zeative/zaileys/blob/main/examples/limiter.ts).
 
-```ts
+```typescript
 const wa = new Client({
   authType: "qr",
 
@@ -180,7 +180,7 @@ wa.on("messages", (ctx) => {
 
 Configure webhooks to handle external events. The URL is dynamically provided in the CLI upon running the app. See [webhooks.ts](https://github.com/zeative/zaileys/blob/main/examples/webhooks.ts).
 
-```ts
+```typescript
 const wa = new Client({
   authType: "qr",
   webhooks: {
@@ -204,7 +204,7 @@ wa.on("webhooks", (ctx) => {
 
 Monitor connection status changes.
 
-```ts
+```typescript
 wa.on("connection", (ctx) => {
   console.log(`Connection: ${ctx.status}`);
 });
@@ -212,7 +212,7 @@ wa.on("connection", (ctx) => {
 
 ### Message Events
 
-```ts
+```typescript
 wa.on("messages", (ctx) => {
   console.log(ctx);
 });
@@ -267,7 +267,7 @@ Schemas output of `ctx` type:
 
 Handle incoming calls.
 
-```ts
+```typescript
 wa.on("calls", (ctx) => {
   console.log(ctx);
 });
@@ -277,7 +277,7 @@ wa.on("calls", (ctx) => {
 
 Handle external webhook requests.
 
-```ts
+```typescript
 wa.on("webhooks", (ctx) => {
   console.log(ctx.data.query); // Query params
   console.log(ctx.data.json); // JSON body
@@ -294,7 +294,7 @@ wa.on("webhooks", (ctx) => {
 
 Send simple or advanced text messages with options like replies or forwarding.
 
-```ts
+```typescript
 const roomId = ctx.roomId;
 const message = ctx.message;
 
@@ -321,7 +321,7 @@ wa.text({ image: "https://example.com/image.png", text: "View once" }, { roomId,
 
 Add reactions, edit, or delete messages.
 
-```ts
+```typescript
 /* sending reaction */
 wa.reaction("👍", { message });
 
@@ -338,7 +338,7 @@ wa.delete("Deleted", { message: original?.message });
 
 Create interactive polls.
 
-```ts
+```typescript
 /* sending polling */
 wa.poll({ name: "Do you love me?", answers: ["Yes", "Maybe", "No"] }, { roomId });
 ```
@@ -347,7 +347,7 @@ wa.poll({ name: "Do you love me?", answers: ["Yes", "Maybe", "No"] }, { roomId }
 
 Share contact information.
 
-```ts
+```typescript
 /* sending contact */
 wa.contact({ fullname: "Kejaa", whatsAppNumber: 628123456789 }, { roomId });
 ```
@@ -356,7 +356,7 @@ wa.contact({ fullname: "Kejaa", whatsAppNumber: 628123456789 }, { roomId });
 
 Share geographic coordinates.
 
-```ts
+```typescript
 /* sending location */
 wa.location({ latitude: 24.121231, longitude: 55.1121221 }, { roomId });
 ```
@@ -367,7 +367,7 @@ wa.location({ latitude: 24.121231, longitude: 55.1121221 }, { roomId });
 
 Send images or stickers from URLs or local files.
 
-```ts
+```typescript
 import fs from "fs";
 
 /* sending by url */
@@ -384,7 +384,7 @@ wa.text({ sticker: "https://github.com/zeative.png" }, { roomId });
 
 Send videos or GIFs with optional captions.
 
-```ts
+```typescript
 /* sending video */
 wa.text({ video: "https://example.com/video.mp4", text: "Video" }, { roomId });
 
@@ -399,7 +399,7 @@ wa.text({ gif: "https://example.com/video.mp4" }, { roomId });
 
 Send audio files or voice notes (use `.ogg` for compatibility).
 
-```ts
+```typescript
 /* sending audio (recommended use .ogg format) */
 wa.text({ audio: "https://example.com/audio.ogg" }, { roomId });
 
@@ -413,7 +413,7 @@ wa.text({ voice: "https://example.com/audio.ogg" }, { roomId });
 
 Update the bot’s presence status in a chat.
 
-```ts
+```typescript
 wa.presence("typing", { roomId }); // Options: typing, recording, online, offline, paused
 ```
 
@@ -421,7 +421,7 @@ wa.presence("typing", { roomId }); // Options: typing, recording, online, offlin
 
 Fetch user or group profiles.
 
-```ts
+```typescript
 wa.profile("628123456789@s.whatsapp.net"); // User profile
 wa.profile("1209999@g.us"); // Group profile
 ```
