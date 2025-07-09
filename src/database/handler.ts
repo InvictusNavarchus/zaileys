@@ -355,16 +355,7 @@ export const StoreAdapterHandler = async (client: Client, db: Kysely<DB>, sessio
       });
 
       socket?.ev.on("messages.update", async (updates) => {
-        console.log("📝 Messages updated:", updates.length, "messages");
         for (const { key, update } of updates) {
-          console.log(`  - Message ${key.id} update:`, {
-            status: update.status,
-            starred: update.starred,
-            reactions: update.reactions,
-            pollUpdates: update.pollUpdates,
-            messageStubType: update.messageStubType,
-          });
-
           // Update the message in database
           const existingMessage = await db
             .selectFrom("messages")
@@ -389,10 +380,7 @@ export const StoreAdapterHandler = async (client: Client, db: Kysely<DB>, sessio
 
       socket?.ev.on("messages.delete", async (deleteData) => {
         if ("keys" in deleteData) {
-          console.log("🗑️  Messages deleted:", deleteData.keys.length, "messages");
           for (const key of deleteData.keys) {
-            console.log(`  - Deleted message: ${key.id} from ${key.remoteJid}`);
-
             // Mark message as deleted or remove from database
             await db
               .deleteFrom("messages")
@@ -401,20 +389,13 @@ export const StoreAdapterHandler = async (client: Client, db: Kysely<DB>, sessio
               .execute();
           }
         } else if ("jid" in deleteData && deleteData.all) {
-          console.log("🗑️  All messages deleted for chat:", deleteData.jid);
           // Delete all messages for the chat
           // This would require joining with message data to filter by remoteJid
         }
       });
 
       socket?.ev.on("messages.reaction", async (reactions) => {
-        console.log("😊 Message reactions:", reactions.length, "reactions");
         for (const { key, reaction } of reactions) {
-          console.log(`  - Reaction on ${key.id}:`, {
-            text: reaction.text,
-            senderTimestampMs: reaction.senderTimestampMs,
-          });
-
           // Update the message with reaction data
           const existingMessage = await db
             .selectFrom("messages")
@@ -449,14 +430,7 @@ export const StoreAdapterHandler = async (client: Client, db: Kysely<DB>, sessio
       });
 
       socket?.ev.on("message-receipt.update", async (receipts) => {
-        console.log("📨 Message receipts updated:", receipts.length, "receipts");
         for (const { key, receipt } of receipts) {
-          console.log(`  - Receipt for ${key.id}:`, {
-            userJid: receipt.userJid,
-            receiptTimestamp: receipt.receiptTimestamp,
-            readTimestamp: receipt.readTimestamp,
-          });
-
           // Update message with receipt information
           const existingMessage = await db
             .selectFrom("messages")
@@ -491,14 +465,7 @@ export const StoreAdapterHandler = async (client: Client, db: Kysely<DB>, sessio
       });
 
       socket?.ev.on("messages.media-update", async (mediaUpdates) => {
-        console.log("🖼️  Media messages updated:", mediaUpdates.length, "media updates");
         for (const { key, media, error } of mediaUpdates) {
-          if (error) {
-            console.log(`  - Media update error for ${key.id}:`, error.message);
-          } else {
-            console.log(`  - Media updated for ${key.id}`);
-          }
-
           // Update message with media information
           const existingMessage = await db
             .selectFrom("messages")
