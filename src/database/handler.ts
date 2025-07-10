@@ -265,10 +265,7 @@ export const StoreAdapterHandler = async (client: Client, db: Kysely<DB>, sessio
 
       socket?.ev.on("call", async (callers) => {
         for (const caller of callers) {
-          const data = await parser.calls(caller);
-          if (client.options.ignoreMe && data) {
-            await sendWebhooks(client.options.webhooks?.url!, data);
-          }
+          await parser.calls(caller);
         }
       });
 
@@ -303,12 +300,13 @@ export const StoreAdapterHandler = async (client: Client, db: Kysely<DB>, sessio
       });
 
       socket?.ev.on("messages.upsert", async ({ messages }) => {
+        console.log("📩 [Zaileys] Messages upsert event fires:", messages.length, "messages");
         for (const message of messages) {
           if (!message.message) return;
           if (message.message?.protocolMessage) return;
 
           const data = await parser.messages(message);
-          if (client.options.ignoreMe && data) {
+          if (data) {
             await sendWebhooks(client.options.webhooks?.url!, data);
           }
 
@@ -355,6 +353,7 @@ export const StoreAdapterHandler = async (client: Client, db: Kysely<DB>, sessio
       });
 
       socket?.ev.on("messages.update", async (updates) => {
+        console.log("📩 [Zaileys] Messages.update event fires:", updates.length, "updates");
         for (const { key, update } of updates) {
           // Update the message in database
           const existingMessage = await db
@@ -365,7 +364,7 @@ export const StoreAdapterHandler = async (client: Client, db: Kysely<DB>, sessio
             .executeTakeFirst();
 
           if (existingMessage) {
-            const messageData = JSON.parse(existingMessage.value);
+            const messageData = JSON.parse(existingMessage.value!);
             Object.assign(messageData, update);
 
             await db
@@ -374,14 +373,40 @@ export const StoreAdapterHandler = async (client: Client, db: Kysely<DB>, sessio
               .where("session", "=", session)
               .where("id", "=", key.id!)
               .execute();
+
+            // Parse and emit the updated message to user listeners
+            const data = await parser.messages(messageData);
+            if (data) {
+              await sendWebhooks(client.options.webhooks?.url!, data);
+            }
           }
         }
       });
 
       socket?.ev.on("messages.delete", async (deleteData) => {
+        console.log("📩 [Zaileys] message.delete event fires:", deleteData);
         if ("keys" in deleteData) {
           for (const key of deleteData.keys) {
-            // Mark message as deleted or remove from database
+            // Get message before deletion for parsing
+            const existingMessage = await db
+              .selectFrom("messages")
+              .select("value")
+              .where("session", "=", session)
+              .where("id", "=", key.id!)
+              .executeTakeFirst();
+
+            if (existingMessage) {
+              const messageData = JSON.parse(existingMessage.value!);
+              // Mark as deleted and parse
+              messageData.isDeleted = true;
+              
+              const data = await parser.messages(messageData);
+              if (data) {
+                await sendWebhooks(client.options.webhooks?.url!, data);
+              }
+            }
+
+            // Remove from database
             await db
               .deleteFrom("messages")
               .where("session", "=", session)
@@ -395,6 +420,7 @@ export const StoreAdapterHandler = async (client: Client, db: Kysely<DB>, sessio
       });
 
       socket?.ev.on("messages.reaction", async (reactions) => {
+        console.log("📩 [Zaileys] Messages.reaction event fires:", reactions.length, "reactions");
         for (const { key, reaction } of reactions) {
           // Update the message with reaction data
           const existingMessage = await db
@@ -405,7 +431,7 @@ export const StoreAdapterHandler = async (client: Client, db: Kysely<DB>, sessio
             .executeTakeFirst();
 
           if (existingMessage) {
-            const messageData = JSON.parse(existingMessage.value);
+            const messageData = JSON.parse(existingMessage.value!);
             messageData.reactions = messageData.reactions || [];
 
             // Add or update reaction
@@ -425,6 +451,12 @@ export const StoreAdapterHandler = async (client: Client, db: Kysely<DB>, sessio
               .where("session", "=", session)
               .where("id", "=", key.id!)
               .execute();
+
+            // Parse and emit the updated message to user listeners
+            const data = await parser.messages(messageData);
+            if (data) {
+              await sendWebhooks(client.options.webhooks?.url!, data);
+            }
           }
         }
       });
@@ -440,7 +472,7 @@ export const StoreAdapterHandler = async (client: Client, db: Kysely<DB>, sessio
             .executeTakeFirst();
 
           if (existingMessage) {
-            const messageData = JSON.parse(existingMessage.value);
+            const messageData = JSON.parse(existingMessage.value!);
             messageData.userReceipt = messageData.userReceipt || [];
 
             // Add or update receipt
@@ -460,6 +492,12 @@ export const StoreAdapterHandler = async (client: Client, db: Kysely<DB>, sessio
               .where("session", "=", session)
               .where("id", "=", key.id!)
               .execute();
+
+            // Parse and emit the updated message to user listeners
+            const data = await parser.messages(messageData);
+            if (data) {
+              await sendWebhooks(client.options.webhooks?.url!, data);
+            }
           }
         }
       });
@@ -475,7 +513,7 @@ export const StoreAdapterHandler = async (client: Client, db: Kysely<DB>, sessio
             .executeTakeFirst();
 
           if (existingMessage) {
-            const messageData = JSON.parse(existingMessage.value);
+            const messageData = JSON.parse(existingMessage.value!);
             if (media) {
               messageData.mediaData = media;
             }
@@ -489,6 +527,12 @@ export const StoreAdapterHandler = async (client: Client, db: Kysely<DB>, sessio
               .where("session", "=", session)
               .where("id", "=", key.id!)
               .execute();
+
+            // Parse and emit the updated message to user listeners
+            const data = await parser.messages(messageData);
+            if (data) {
+              await sendWebhooks(client.options.webhooks?.url!, data);
+            }
           }
         }
       });
